@@ -55,18 +55,18 @@ func handlePacket(data []byte, l *net.UDPConn, a *net.UDPAddr) {
 			}
 	*/
 	if msg.Type == Acknowledgement {
-		H.ack <- map[string]uint16{a.String(): msg.MessageID}
+		s.ack <- map[string]uint16{a.String(): msg.MessageID}
 		return
 	}
 
 	if msg.IsObserver() {
-		o := &Observer{Addr: &RemoteAddr{a},
-			Send: make(chan *Message),
-			ack:  make(chan uint16),
-			rsc:  msg.PathString(),
-      payload: string(msg.Payload)}
+		o := &observer{addr: &RemoteAddr{a},
+			send:    make(chan *transmission),
+			ack:     make(chan uint16),
+			rsc:     msg.PathString(),
+			payload: string(msg.Payload)}
 		// adds new observer
-		H.register <- o
+		s.register <- o
 		go o.transmitter()
 	}
 
@@ -147,7 +147,7 @@ func (srv *Server) ListenAndServe() error {
 		return e
 	}
 	DefaultServer.conn = l
-	go H.run()
+	go s.run()
 	return srv.Serve(l)
 }
 
@@ -187,14 +187,17 @@ func (srv *Server) Serve(l *net.UDPConn) error {
 }
 
 // Notify observers of resource.
-func Notify(resource string, m *Message) {
-	if m != nil {
-		for _, o := range H.Observers[resource[1:]] {
-			select {
-			case o.Send <- m:
-			}
-		}
-	}
+func Notify(resource string, m Message) {
+	// broadcast callback not used
+	done := make(chan bool)
+	s.broadcast <- &transmission{ctx: resource, msg: &m, ret: &done}
+}
+
+// Transmit to an observer
+func TransmitToObserver(resource, id string, m Message) (done chan bool) {
+	done = make(chan bool)
+	s.unicast <- &transmission{ctx: resource, id: id, msg: &m, ret: &done}
+	return
 }
 
 // Print debug messages

@@ -16,6 +16,7 @@ CoAP Client and Server in Go
 * [func  StringToTime](#func--stringtotime)
 * [func  TimeToString](#func--timetostring)
 * [func  Transmit](#func--transmit)
+* [func  TransmitToObserver](#func--transmittoobserver)
 * [type COAPCode](#type-coapcode)
     + [func (COAPCode) String](#func-coapcode-string)
 * [type COAPType](#type-coaptype)
@@ -24,7 +25,6 @@ CoAP Client and Server in Go
     + [func  Dial](#func--dial)
     + [func (*Conn) Receive](#func-conn-receive)
     + [func (*Conn) Send](#func-conn-send)
-* [type HUB](#type-hub)
 * [type Handler](#type-handler)
 * [type HandlerFunc](#type-handlerfunc)
     + [func (HandlerFunc) ServeCOAP](#func-handlerfunc-servecoap)
@@ -43,7 +43,6 @@ CoAP Client and Server in Go
     + [func (*Message) SetOption](#func-message-setoption)
     + [func (*Message) SetPath](#func-message-setpath)
     + [func (*Message) SetPathString](#func-message-setpathstring)
-* [type Observer](#type-observer)
 * [type OptionID](#type-optionid)
 * [type RemoteAddr](#type-remoteaddr)
 * [type ServeMux](#type-servemux)
@@ -138,15 +137,6 @@ var DefaultServeMux = NewServeMux()
 var DefaultServer = new(Server)
 ```
 
-```go
-var H = HUB{
-	ack:        make(chan map[string]uint16),
-	register:   make(chan *Observer),
-	unregister: make(chan *Observer),
-	Observers:  make(map[string]map[string]*Observer),
-}
-```
-
 #### func  [Handle](#handle)
 
 ```go
@@ -169,7 +159,7 @@ Bind to the given address and serve requests forever.
 #### func  [Notify](#notify)
 
 ```go
-func Notify(resource string, m *Message)
+func Notify(resource string, m Message)
 ```
 Notify observers of resource.
 
@@ -203,6 +193,13 @@ representation used when printing the record. It takes serial arithmetic (RFC
 func Transmit(r *RemoteAddr, m Message) error
 ```
 Unicast message to remote address
+
+#### func  [TransmitToObserver](#transmittoobserver)
+
+```go
+func TransmitToObserver(resource, id string, m Message) (done chan bool)
+```
+Transmit to an observer
 
 #### type [COAPCode](#coapcode)
 
@@ -300,16 +297,6 @@ Receive a message.
 func (c *Conn) Send(req Message) (*Message, error)
 ```
 Send a message. Get a response if there is one.
-
-#### type [HUB](#hub)
-
-```go
-type HUB struct {
-	Observers map[string]map[string]*Observer
-}
-```
-
-Internal hub
 
 #### type [Handler](#handler)
 
@@ -447,17 +434,6 @@ SetPath updates or adds a LocationPath attribute on this message.
 func (m *Message) SetPathString(s string)
 ```
 SetPathString sets a path by a / separated string.
-
-#### type [Observer](#observer)
-
-```go
-type Observer struct {
-	Addr *RemoteAddr
-	Send chan *Message
-}
-```
-
-Observer of some resource
 
 #### type [OptionID](#optionid)
 
