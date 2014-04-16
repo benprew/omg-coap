@@ -2,7 +2,8 @@
 
     import "github.com/cloudwalkio/omg-coap"
 
-CoAP Client and Server in Go
+CoAP Client and Server in Go [![Build
+Status](https://drone.io/github.com/cloudwalkio/omg-coap/status.png)](https://drone.io/github.com/cloudwalkio/omg-coap/latest)
 
 ### Index
 
