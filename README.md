@@ -159,7 +159,7 @@ Bind to the given address and serve requests forever.
 #### func  [Notify](#notify)
 
 ```go
-func Notify(resource string, m Message)
+func Notify(resource string, m *Message)
 ```
 Notify observers of resource.
 
@@ -197,7 +197,7 @@ Unicast message to remote address
 #### func  [TransmitToObserver](#transmittoobserver)
 
 ```go
-func TransmitToObserver(resource, id string, m Message) (done chan bool)
+func TransmitToObserver(resource, id string, m *Message) (done chan bool)
 ```
 Transmit to an observer
 

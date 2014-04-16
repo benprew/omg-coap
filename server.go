@@ -187,16 +187,16 @@ func (srv *Server) Serve(l *net.UDPConn) error {
 }
 
 // Notify observers of resource.
-func Notify(resource string, m Message) {
+func Notify(resource string, m *Message) {
 	// broadcast callback not used
 	done := make(chan bool)
-	s.broadcast <- &transmission{ctx: resource, msg: &m, ret: &done}
+	s.broadcast <- &transmission{ctx: resource[1:], msg: m, ret: &done}
 }
 
 // Transmit to an observer
-func TransmitToObserver(resource, id string, m Message) (done chan bool) {
+func TransmitToObserver(resource, id string, m *Message) (done chan bool) {
 	done = make(chan bool)
-	s.unicast <- &transmission{ctx: resource, id: id, msg: &m, ret: &done}
+	s.unicast <- &transmission{ctx: resource, id: id, msg: m, ret: &done}
 	return
 }
 
