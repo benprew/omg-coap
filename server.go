@@ -1,4 +1,5 @@
-// CoAP Client and Server in Go [![Build Status](https://drone.io/github.com/cloudwalkio/omg-coap/status.png)](https://drone.io/github.com/cloudwalkio/omg-coap/latest)
+// CoAP Client and Server in Go
+/* [![Build Status](https://drone.io/github.com/cloudwalkio/omg-coap/status.png)](https://drone.io/github.com/cloudwalkio/omg-coap/latest) */
 package coap
 
 import (
@@ -188,15 +189,15 @@ func (srv *Server) Serve(l *net.UDPConn) error {
 
 // Notify observers of resource.
 func Notify(resource string, m *Message) {
-	// broadcast callback not used
+	// to-do broadcast callback revision
 	done := make(chan bool)
-	s.broadcast <- &transmission{ctx: resource[1:], msg: m, ret: &done}
+	s.broadcast <- &transmission{ctx: resource[1:], msg: m, ret: &done, brd: true}
 }
 
 // Transmit to an observer
 func TransmitToObserver(resource, id string, m *Message) (done chan bool) {
 	done = make(chan bool)
-	s.unicast <- &transmission{ctx: resource, id: id, msg: m, ret: &done}
+	s.unicast <- &transmission{ctx: resource, id: id, msg: m, ret: &done, brd: false}
 	return
 }
 

@@ -20,6 +20,7 @@ type transmission struct {
 	id  string
 	msg *Message
 	ret *chan bool
+	brd bool
 }
 
 // Internal switch
@@ -67,7 +68,7 @@ func (o *observer) transmitter() {
 	o.tid = uint16(rand.Intn(65536))
 	for t := range o.send {
 		o.tid++
-		go func(m Message, tid uint16, maxRetransmit int, responseTimeout time.Duration, alive chan bool) {
+		go func(m Message, tid uint16, maxRetransmit int, responseTimeout time.Duration, alive chan bool, broadcast bool) {
 			m.MessageID = tid
 			ticker := time.NewTicker(responseTimeout)
 			for i := 0; i <= maxRetransmit; i++ {
@@ -78,13 +79,17 @@ func (o *observer) transmitter() {
 				select {
 				case a := <-o.ack:
 					if a == m.MessageID {
-						alive <- true
+						if !broadcast {
+							alive <- true
+						}
 						return
 					}
 				case <-ticker.C:
 					if i == maxRetransmit {
 						debugMsg("** transmission of message %v of [%s] resource timeout", m.MessageID, o.rsc)
-						alive <- false
+						if !broadcast {
+							alive <- false
+						}
 						s.unregister <- o
 						return
 					}
@@ -94,7 +99,7 @@ func (o *observer) transmitter() {
 					}
 				}
 			}
-		}(*t.msg, o.tid, MaxRetransmit, ResponseTimeout, *t.ret)
+		}(*t.msg, o.tid, MaxRetransmit, ResponseTimeout, *t.ret, t.brd)
 	}
 }
 
@@ -127,8 +132,8 @@ func (s *coapswitch) run() {
 			}
 		case t := <-s.broadcast:
 			// message to all of context
-			obs, alive := s.observers[t.ctx]
-			if alive {
+			obs, ok := s.observers[t.ctx]
+			if ok {
 				for _, o := range obs {
 					o.send <- t
 				}
